@@ -1,27 +1,27 @@
-FROM python:3.14
+FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies untuk OpenCV
+# Install dependensi sistem
 RUN apt-get update && apt-get install -y \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements dan install
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend files
-COPY main.py .
-COPY model_3kelas.pt .
-COPY model_4kelas.pt .
-COPY rekomendasi.json .
+# Paksa OpenCV Headless
+RUN pip uninstall -y opencv-python opencv-python-headless
+RUN pip install --no-cache-dir opencv-python-headless
 
-# Expose port
+COPY . .
+
 EXPOSE 8000
 
-# Run FastAPI
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
